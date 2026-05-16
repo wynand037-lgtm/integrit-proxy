@@ -1,8 +1,7 @@
-
-json{
-  "name": "integrit-claude-proxy",
-  "version": "1.0.0",
-  "description": "InteGrit Safety — Claude API Proxy",
+{
+  "name": "integrit-coach-portal",
+  "version": "2.0.0",
+  "description": "InteGrit Life Coaching — Coach Progress Tracker",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

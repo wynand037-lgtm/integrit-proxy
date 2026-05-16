@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InteGrit · Coach Dashboard</title>
+<style>
+  :root {
+    --navy:   #1a1a2e;
+    --navy2:  #16213e;
+    --gold:   #c9a84c;
+    --gold2:  #e8c96a;
+    --green:  #2d6a4f;
+    --green2: #40916c;
+    --red:    #c0392b;
+    --orange: #e07b39;
+    --bg:     #f4f5f7;
+    --white:  #ffffff;
+    --gray1:  #f8f9fa;
+    --gray2:  #e9ecef;
+    --gray3:  #dee2e6;
+    --gray4:  #adb5bd;
+    --gray5:  #6c757d;
+    --text:   #212529;
+    --radius: 8px;
+    --shadow: 0 2px 8px rgba(0,0,0,.10);
+    --shadow2: 0 4px 20px rgba(0,0,0,.15);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
+
+  /* ── Sidebar ── */
+  #sidebar {
+    width: 280px; min-width: 280px; background: var(--navy); color: #fff;
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  #sidebar-header {
+    padding: 20px 20px 16px;
+    background: var(--navy2);
+    border-bottom: 1px solid rgba(201,168,76,.3);
+  }
+  #sidebar-header h1 { font-size: 20px; font-weight: 700; color: var(--gold); letter-spacing: 2px; }
+  #sidebar-header p  { font-size: 11px; color: rgba(255,255,255,.5); margin-top: 2px; letter-spacing: 1px; text-transform: uppercase; }
+  #client-search-wrap { padding: 12px 16px; }
+  #client-search {
+    width: 100%; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12);
+    border-radius: var(--radius); padding: 8px 12px; color: #fff; font-size: 13px; outline: none;
+  }
+  #client-search::placeholder { color: rgba(255,255,255,.35); }
+  #client-list { flex: 1; overflow-y: auto; padding: 0 8px 8px; }
+  #client-list::-webkit-scrollbar { width: 4px; }
+  #client-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 2px; }
+
+  .client-card {
+    padding: 12px 14px; border-radius: var(--radius); margin-bottom: 4px;
+    cursor: pointer; transition: background .15s; border-left: 3px solid transparent;
+    position: relative;
+  }
+  .client-card:hover  { background: rgba(255,255,255,.07); }
+  .client-card.active { background: rgba(201,168,76,.15); border-left-color: var(--gold); }
+  .client-card .cc-name { font-size: 14px; font-weight: 600; color: #fff; }
+  .client-card .cc-meta {
+    font-size: 11px; color: rgba(255,255,255,.45); margin-top: 3px;
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+  }
+  .cc-phase-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: rgba(201,168,76,.2); color: var(--gold2); border-radius: 10px;
+    padding: 1px 7px; font-size: 10px; font-weight: 600;
+  }
+  /* Set password button on client card */
+  .cc-set-pwd {
+    margin-left: auto;
+    background: rgba(255,255,255,.1);
+    border: 1px solid rgba(255,255,255,.18);
+    border-radius: 6px;
+    color: rgba(255,255,255,.65);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 7px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background .15s, color .15s;
+  }
+  .cc-set-pwd:hover { background: rgba(201,168,76,.25); color: var(--gold2); border-color: rgba(201,168,76,.4); }
+  .cc-has-pwd { color: var(--green2); border-color: rgba(64,145,108,.4); background: rgba(64,145,108,.12); }
+
+  #btn-add-client {
+    margin: 8px 16px 12px; padding: 10px; border: 1px dashed rgba(201,168,76,.4);
+    background: transparent; color: var(--gold); border-radius: var(--radius);
+    cursor: pointer; font-size: 13px; font-weight: 600; letter-spacing: .5px;
+    transition: background .15s; width: calc(100% - 32px);
+  }
+  #btn-add-client:hover { background: rgba(201,168,76,.1); }
+
+  /* Logout link in sidebar footer */
+  #sidebar-footer {
+    padding: 10px 16px 14px;
+    border-top: 1px solid rgba(255,255,255,.08);
+  }
+  #sidebar-footer a {
+    font-size: 12px; color: rgba(255,255,255,.35); text-decoration: none;
+    display: flex; align-items: center; gap: 6px;
+    transition: color .15s;
+  }
+  #sidebar-footer a:hover { color: rgba(255,255,255,.7); }
+
+  /* ── Main ── */
+  #main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* ── Top bar ── */
+  #topbar {
+    background: var(--white); border-bottom: 1px solid var(--gray3);
+    padding: 14px 28px; display: flex; align-items: center; gap: 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  }
+  #topbar h2 { font-size: 18px; font-weight: 700; color: var(--navy); flex: 1; }
+  #topbar-meta { font-size: 12px; color: var(--gray5); }
+  .btn {
+    padding: 8px 18px; border-radius: var(--radius); border: none;
+    cursor: pointer; font-size: 13px; font-weight: 600; transition: all .15s;
+  }
+  .btn-primary   { background: var(--gold);  color: var(--navy); }
+  .btn-primary:hover { background: var(--gold2); }
+  .btn-secondary { background: var(--gray2); color: var(--text); }
+  .btn-secondary:hover { background: var(--gray3); }
+  .btn-danger    { background: var(--red);   color: #fff; }
+  .btn-danger:hover { filter: brightness(1.1); }
+  .btn-green     { background: var(--green); color: #fff; }
+  .btn-green:hover { background: var(--green2); }
+
+  /* ── Content ── */
+  #content { flex: 1; overflow-y: auto; padding: 24px 28px; }
+  #content::-webkit-scrollbar { width: 6px; }
+  #content::-webkit-scrollbar-thumb { background: var(--gray3); border-radius: 3px; }
+
+  /* ── Empty state ── */
+  #empty-state {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    height: 100%; gap: 16px; color: var(--gray4);
+  }
+  #empty-state .es-icon { font-size: 64px; }
+  #empty-state h3 { font-size: 20px; color: var(--gray5); }
+  #empty-state p  { font-size: 14px; max-width: 320px; text-align: center; line-height: 1.5; }
+
+  /* ── Client header info ── */
+  #client-info-bar {
+    background: var(--white); border-radius: var(--radius); padding: 20px 24px;
+    margin-bottom: 20px; box-shadow: var(--shadow); display: flex; gap: 28px; align-items: flex-start; flex-wrap: wrap;
+  }
+  .info-group label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--gray5); }
+  .info-group .info-val { font-size: 14px; font-weight: 600; color: var(--text); margin-top: 2px; }
+  .info-group input, .info-group textarea {
+    border: 1px solid var(--gray3); border-radius: 6px; padding: 6px 10px;
+    font-size: 13px; color: var(--text); background: var(--gray1); width: 100%;
+    font-family: inherit; outline: none; transition: border-color .15s;
+  }
+  .info-group input:focus, .info-group textarea:focus { border-color: var(--gold); background: #fff; }
+  .info-group { min-width: 140px; }
+
+  /* ── Phase tabs ── */
+  #phase-tabs { display: flex; gap: 4px; margin-bottom: 20px; overflow-x: auto; }
+  .phase-tab {
+    padding: 10px 18px; border-radius: var(--radius); cursor: pointer; border: 2px solid transparent;
+    font-size: 13px; font-weight: 600; color: var(--gray5); background: var(--white);
+    white-space: nowrap; transition: all .15s; box-shadow: var(--shadow);
+  }
+  .phase-tab:hover { color: var(--navy); border-color: var(--gray3); }
+  .phase-tab.active { background: var(--navy); color: var(--gold); border-color: var(--navy); }
+  .phase-tab .pt-num { font-size: 10px; display: block; opacity: .6; }
+
+  /* ── Phase header ── */
+  #phase-header {
+    background: linear-gradient(135deg, var(--navy), var(--navy2));
+    border-radius: var(--radius); padding: 20px 24px; margin-bottom: 16px;
+    color: #fff; box-shadow: var(--shadow2);
+  }
+  #phase-header .ph-num  { font-size: 11px; color: var(--gold); font-weight: 600; letter-spacing: 2px; text-transform: uppercase; }
+  #phase-header h3       { font-size: 22px; font-weight: 700; margin: 6px 0 4px; }
+  #phase-header .ph-tag  { font-size: 13px; color: rgba(255,255,255,.6); font-style: italic; }
+  #phase-header .ph-weeks { font-size: 11px; color: rgba(255,255,255,.4); margin-top: 8px; }
+
+  /* ── Phase progress ── */
+  .phase-progress { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
+  .phase-progress .prog-bar { flex: 1; height: 4px; background: rgba(255,255,255,.2); border-radius: 2px; }
+  .phase-progress .prog-fill { height: 100%; background: var(--gold); border-radius: 2px; transition: width .3s; }
+  .phase-progress .prog-label { font-size: 11px; color: rgba(255,255,255,.5); white-space: nowrap; }
+
+  /* ── Section list ── */
+  .section-item {
+    background: var(--white); border-radius: var(--radius); margin-bottom: 10px;
+    box-shadow: var(--shadow); overflow: hidden; border-left: 4px solid var(--gray3);
+    transition: border-color .2s;
+  }
+  .section-item.status-complete    { border-left-color: var(--green); }
+  .section-item.status-in-progress { border-left-color: var(--orange); }
+  .section-item.status-attention   { border-left-color: var(--red); }
+
+  .section-header {
+    padding: 14px 18px; display: flex; align-items: center; gap: 12px;
+    cursor: pointer; user-select: none;
+  }
+  .section-header:hover { background: var(--gray1); }
+  .sec-num { width: 28px; height: 28px; border-radius: 50%; background: var(--gray2); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--gray5); flex-shrink: 0; }
+  .sec-title { flex: 1; font-size: 14px; font-weight: 600; color: var(--text); }
+  .sec-status-badge {
+    padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;
+    white-space: nowrap;
+  }
+  .badge-complete    { background: #d4edda; color: var(--green); }
+  .badge-in-progress { background: #fef3cd; color: #856404; }
+  .badge-attention   { background: #f8d7da; color: var(--red); }
+  .badge-not-started { background: var(--gray2); color: var(--gray5); }
+  .sec-chevron { color: var(--gray4); font-size: 14px; transition: transform .2s; }
+  .section-item.open .sec-chevron { transform: rotate(90deg); }
+
+  .section-body { display: none; padding: 0 18px 18px; border-top: 1px solid var(--gray2); }
+  .section-item.open .section-body { display: block; }
+
+  .field-group { margin-top: 14px; }
+  .field-group label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--gray5); font-weight: 600; display: block; margin-bottom: 6px; }
+  .field-group textarea {
+    width: 100%; border: 1px solid var(--gray3); border-radius: 6px; padding: 10px 12px;
+    font-size: 13px; color: var(--text); line-height: 1.55; resize: vertical; min-height: 80px;
+    font-family: inherit; background: var(--gray1); outline: none; transition: border-color .15s;
+  }
+  .field-group textarea:focus { border-color: var(--gold); background: #fff; }
+
+  .outcome-box {
+    background: linear-gradient(135deg, #fffbf0, #fff9e8);
+    border: 1px solid #f0d68a; border-radius: 6px; padding: 10px 12px;
+    font-size: 13px; color: var(--text); line-height: 1.55; min-height: 80px;
+    font-family: inherit; resize: vertical; width: 100%; outline: none;
+    transition: border-color .15s;
+  }
+  .outcome-box:focus { border-color: var(--gold); }
+
+  .section-actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; align-items: center; }
+  .status-selector { display: flex; gap: 6px; flex-wrap: wrap; }
+  .status-btn {
+    padding: 5px 12px; border-radius: 20px; border: 2px solid transparent;
+    font-size: 11px; font-weight: 700; cursor: pointer; transition: all .15s;
+    background: var(--gray2); color: var(--gray5);
+  }
+  .status-btn.active-complete    { background: #d4edda; color: var(--green); border-color: var(--green); }
+  .status-btn.active-in-progress { background: #fef3cd; color: #856404; border-color: #d4a017; }
+  .status-btn.active-attention   { background: #f8d7da; color: var(--red); border-color: var(--red); }
+  .status-btn:hover { filter: brightness(.95); }
+  .save-indicator { font-size: 11px; color: var(--green2); margin-left: auto; opacity: 0; transition: opacity .3s; }
+  .save-indicator.show { opacity: 1; }
+
+  /* ── Commitment row ── */
+  .commitment-row {
+    display: flex; gap: 10px; align-items: center; margin-top: 14px;
+    background: var(--gray1); border-radius: 6px; padding: 10px 12px;
+  }
+  .commitment-row label { font-size: 12px; font-weight: 600; color: var(--gray5); white-space: nowrap; }
+  .commitment-row input[type="text"] {
+    flex: 1; border: 1px solid var(--gray3); border-radius: 6px; padding: 7px 10px;
+    font-size: 13px; background: #fff; outline: none; font-family: inherit;
+  }
+  .commitment-row input[type="text"]:focus { border-color: var(--gold); }
+  .commit-status-btn {
+    padding: 6px 12px; border-radius: 6px; border: none; cursor: pointer; font-size: 12px; font-weight: 600;
+  }
+  .commit-met  { background: #d4edda; color: var(--green); }
+  .commit-miss { background: #f8d7da; color: var(--red); }
+  .commit-none { background: var(--gray2); color: var(--gray5); }
+
+  /* ── General notes ── */
+  #general-notes-section {
+    background: var(--white); border-radius: var(--radius); padding: 20px 24px;
+    margin-bottom: 20px; box-shadow: var(--shadow);
+  }
+  #general-notes-section h4 { font-size: 13px; font-weight: 700; color: var(--gray5); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+
+  /* ── Modals shared ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55);
+    z-index: 1000; align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+
+  /* ── Add/Edit client modal ── */
+  #modal {
+    background: var(--white); border-radius: 12px; padding: 32px; max-width: 720px;
+    width: 90%; max-height: 85vh; overflow-y: auto; box-shadow: var(--shadow2);
+    position: relative;
+  }
+  #modal h3 { font-size: 20px; font-weight: 700; color: var(--navy); margin-bottom: 4px; }
+  #modal .modal-sub { font-size: 13px; color: var(--gray5); margin-bottom: 20px; }
+  #modal-close { position: absolute; top: 16px; right: 20px; background: none; border: none; font-size: 22px; cursor: pointer; color: var(--gray4); }
+  #modal-close:hover { color: var(--text); }
+  #modal form { display: flex; flex-direction: column; gap: 16px; }
+  #modal label { font-size: 12px; font-weight: 600; color: var(--gray5); text-transform: uppercase; letter-spacing: .5px; }
+  #modal input, #modal textarea, #modal select {
+    border: 1px solid var(--gray3); border-radius: 6px; padding: 10px 12px;
+    font-size: 14px; font-family: inherit; width: 100%; outline: none;
+    background: var(--gray1); transition: border-color .15s;
+  }
+  #modal input:focus, #modal textarea:focus { border-color: var(--gold); background: #fff; }
+  #modal .form-row { display: flex; gap: 14px; }
+  #modal .form-row > * { flex: 1; }
+  #modal-actions { display: flex; gap: 10px; margin-top: 8px; justify-content: flex-end; }
+
+  /* ── Report modal ── */
+  #report-modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55);
+    z-index: 1000; align-items: center; justify-content: center;
+  }
+  #report-modal-overlay.open { display: flex; }
+  #report-modal {
+    background: var(--white); border-radius: 12px; padding: 32px; max-width: 760px;
+    width: 90%; max-height: 85vh; overflow-y: auto; box-shadow: var(--shadow2);
+    position: relative;
+  }
+  #report-content {
+    background: var(--gray1); border-radius: 8px; padding: 20px;
+    font-size: 13px; line-height: 1.65; white-space: pre-wrap; font-family: monospace;
+    max-height: 55vh; overflow-y: auto; color: var(--text); border: 1px solid var(--gray3);
+  }
+
+  /* ── Set client password modal ── */
+  #pwd-modal {
+    background: var(--white); border-radius: 12px; padding: 32px; max-width: 420px;
+    width: 90%; box-shadow: var(--shadow2); position: relative;
+  }
+  #pwd-modal h3 { font-size: 18px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
+  #pwd-modal .pwd-sub { font-size: 13px; color: var(--gray5); margin-bottom: 20px; }
+  #pwd-modal label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--gray5); margin-bottom: 6px; }
+  #pwd-modal input {
+    width: 100%; border: 1.5px solid var(--gray3); border-radius: var(--radius); padding: 10px 12px;
+    font-size: 14px; font-family: inherit; background: var(--gray1); outline: none;
+    transition: border-color .15s;
+  }
+  #pwd-modal input:focus { border-color: var(--gold); background: #fff; }
+  #pwd-modal .pwd-hint { font-size: 11px; color: var(--gray5); margin-top: 6px; }
+  #pwd-modal .pwd-error { font-size: 12px; color: var(--red); margin-top: 8px; display: none; }
+  #pwd-modal .pwd-error.show { display: block; }
+  #pwd-modal .pwd-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+  #pwd-close { position: absolute; top: 14px; right: 18px; background: none; border: none; font-size: 22px; cursor: pointer; color: var(--gray4); }
+  #pwd-close:hover { color: var(--text); }
+
+  /* ── Delete confirm ── */
+  #delete-modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55);
+    z-index: 1010; align-items: center; justify-content: center;
+  }
+  #delete-modal-overlay.open { display: flex; }
+  #delete-modal {
+    background: #fff; border-radius: 12px; padding: 32px; max-width: 400px; width: 90%;
+    text-align: center; box-shadow: var(--shadow2);
+  }
+  #delete-modal h4 { font-size: 18px; font-weight: 700; color: var(--red); margin-bottom: 10px; }
+  #delete-modal p  { font-size: 14px; color: var(--gray5); margin-bottom: 24px; }
+  #delete-modal .dm-btns { display: flex; gap: 10px; justify-content: center; }
+
+  /* ── Toast ── */
+  #toast {
+    position: fixed; bottom: 24px; right: 24px; background: var(--navy);
+    color: #fff; padding: 12px 20px; border-radius: 8px; font-size: 13px; font-weight: 600;
+    box-shadow: var(--shadow2); z-index: 2000; transform: translateY(80px);
+    transition: transform .3s; pointer-events: none;
+  }
+  #toast.show { transform: translateY(0); }
+
+  @media (max-width: 700px) {
+    #sidebar { width: 220px; min-width: 220px; }
+    #content { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div id="sidebar">
+  <div id="sidebar-header">
+    <h1>INTEGRIT</h1>
+    <p>Life Coaching · Coach Portal</p>
+  </div>
+  <div id="client-search-wrap">
+    <input id="client-search" type="text" placeholder="Search clients…" oninput="renderClientList()">
+  </div>
+  <div id="client-list"></div>
+  <button id="btn-add-client" onclick="openAddClientModal()">+ Add Client</button>
+  <div id="sidebar-footer">
+    <a href="/logout">⎋ Sign out</a>
+  </div>
+</div>
+
+<!-- Main -->
+<div id="main">
+  <div id="topbar">
+    <h2 id="topbar-title">Coach Dashboard</h2>
+    <span id="topbar-meta"></span>
+    <div id="topbar-actions" style="display:none;">
+      <button class="btn btn-green" onclick="openReportModal()">Export Report</button>
+      <button class="btn btn-secondary" onclick="openEditClientModal()">Edit Client</button>
+      <button class="btn btn-danger" onclick="openDeleteModal()">Delete</button>
+    </div>
+  </div>
+
+  <div id="content">
+    <div id="empty-state">
+      <div class="es-icon">📋</div>
+      <h3>No client selected</h3>
+      <p>Select a client from the sidebar or add a new one to start tracking their InteGrit journey.</p>
+    </div>
+    <div id="client-view" style="display:none;">
+      <div id="client-info-bar"></div>
+      <div id="general-notes-section" style="display:none;">
+        <h4>Coach Notes</h4>
+        <textarea id="general-notes-ta" rows="3" placeholder="General notes about this client…" oninput="scheduleClientNoteSave()"></textarea>
+      </div>
+      <div id="phase-tabs"></div>
+      <div id="phase-header"></div>
+      <div id="section-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Client Modal -->
+<div id="modal-overlay" class="modal-overlay">
+  <div id="modal">
+    <button id="modal-close" onclick="closeModal()">×</button>
+    <h3 id="modal-title">Add New Client</h3>
+    <p class="modal-sub" id="modal-sub">Enter the client's details to create their profile.</p>
+    <form id="modal-form" onsubmit="submitClientModal(event)">
+      <div>
+        <label>Full Name *</label>
+        <input id="mf-name" type="text" required placeholder="e.g. Sarah Johnson">
+      </div>
+      <div class="form-row">
+        <div>
+          <label>Email</label>
+          <input id="mf-email" type="email" placeholder="sarah@email.com">
+        </div>
+        <div>
+          <label>Phone</label>
+          <input id="mf-phone" type="tel" placeholder="+1 555 0000">
+        </div>
+      </div>
+      <div>
+        <label>Program Start Date</label>
+        <input id="mf-start" type="date">
+      </div>
+      <div id="modal-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="modal-submit-btn">Create Client</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Report Modal -->
+<div id="report-modal-overlay">
+  <div id="report-modal">
+    <button style="position:absolute;top:16px;right:20px;background:none;border:none;font-size:22px;cursor:pointer;color:#adb5bd;" onclick="closeReportModal()">×</button>
+    <h3 id="report-modal-title">Client Progress Report</h3>
+    <p class="modal-sub" id="report-modal-sub"></p>
+    <div id="report-content"></div>
+    <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end;">
+      <button class="btn btn-secondary" onclick="closeReportModal()">Close</button>
+      <button class="btn btn-primary" onclick="copyReport()">Copy to Clipboard</button>
+    </div>
+  </div>
+</div>
+
+<!-- Set Client Password Modal -->
+<div id="pwd-modal-overlay" class="modal-overlay">
+  <div id="pwd-modal">
+    <button id="pwd-close" onclick="closePwdModal()">×</button>
+    <h3>Set Client Portal Password</h3>
+    <p class="pwd-sub" id="pwd-sub">The client will use their email address and this password to log in to their portal.</p>
+    <div>
+      <label for="pwd-input">New Password</label>
+      <input type="password" id="pwd-input" placeholder="Minimum 6 characters" autocomplete="new-password">
+      <div class="pwd-hint">The client logs in with their email + this password.</div>
+      <div class="pwd-error" id="pwd-error"></div>
+    </div>
+    <div class="pwd-actions">
+      <button class="btn btn-secondary" onclick="closePwdModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitSetPassword()">Set Password</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div id="delete-modal-overlay">
+  <div id="delete-modal">
+    <h4>Delete Client?</h4>
+    <p id="delete-modal-msg">This will permanently delete the client and all their progress data. This cannot be undone.</p>
+    <div class="dm-btns">
+      <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+      <button class="btn btn-danger" onclick="confirmDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+// ── Phase definitions ─────────────────────────────────────────────────────────
+const PHASES = {
+  1: {
+    title: 'Identity Foundation', weeks: 'Weeks 1–2',
+    tagline: 'Everything changes when you change who you believe you are.',
+    sections: [
+      { id: 1, title: 'The Person You Are Calling Yourself' },
+      { id: 2, title: 'Casting Votes for a New Identity' },
+      { id: 3, title: 'What You Want Tells You Who You Are' },
+      { id: 4, title: 'The Stories That Have Run You' },
+      { id: 5, title: 'Mapping Your Triggers' },
+      { id: 6, title: 'A Letter to Your Future Self' }
+    ]
+  },
+  2: {
+    title: 'Desire, Vision & Purpose', weeks: 'Weeks 3–4',
+    tagline: 'You will not sustain what you do not truly want.',
+    sections: [
+      { id: 1, title: 'The Difference Between Wanting and Desiring' },
+      { id: 2, title: 'Your Burning Desire — Written and Specific' },
+      { id: 3, title: 'Desire Reveals Identity — Checking the Connection' },
+      { id: 4, title: 'Your Self-Sabotage Pattern' },
+      { id: 5, title: 'Who Is Telling You What Is Possible?' },
+      { id: 6, title: 'The Decision — Full Commitment' }
+    ]
+  },
+  3: {
+    title: 'Building Your System', weeks: 'Weeks 5–8',
+    tagline: 'Your habits will only be as strong as the system behind them.',
+    sections: [
+      { id: 1, title: 'Small is Not Weak — It Is Strategic' },
+      { id: 2, title: 'Designing Your Environment' },
+      { id: 3, title: 'The Four Laws — Making Habits Work With You' },
+      { id: 4, title: 'Stacking Habits Onto What Already Works' },
+      { id: 5, title: 'Preloading Your Decisions' },
+      { id: 6, title: 'Your Written Coaching Plan' },
+      { id: 7, title: 'Your Accountability Structure' }
+    ]
+  },
+  4: {
+    title: 'Momentum & Resilience', weeks: 'Weeks 9–12',
+    tagline: 'Growth is not a straight line. Learning to stay in it is the work.',
+    sections: [
+      { id: 1, title: 'Reading Your Data Honestly' },
+      { id: 2, title: 'Never Miss Twice' },
+      { id: 3, title: 'The Plateau Is Part of the Process' },
+      { id: 4, title: 'When Motivation Goes Quiet' },
+      { id: 5, title: 'The Five Resilience Skills' },
+      { id: 6, title: 'A Letter to the Version of You That Wants to Quit' }
+    ]
+  },
+  5: {
+    title: 'Mastery & New Beginning', weeks: 'Weeks 13–16+',
+    tagline: 'You are not finishing a program. You are starting a life.',
+    sections: [
+      { id: 1, title: 'The Identity Confirmation' },
+      { id: 2, title: 'The Full Habit Audit' },
+      { id: 3, title: 'Reviewing Your Desire' },
+      { id: 4, title: 'Your Self-Coaching Questions' },
+      { id: 5, title: 'Building Your Ongoing Mastermind' },
+      { id: 6, title: 'A Letter Forward' }
+    ]
+  }
+};
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let clients = [];
+let activeClientId = null;
+let activePhase = 1;
+let modalMode = 'add';
+let saveTimers = {};
+let clientNoteSaveTimer = null;
+let pwdTargetClientId = null;
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+async function init() {
+  const res = await fetch('/api/clients');
+  if (res.status === 401) { location.href = '/login'; return; }
+  clients = await res.json();
+  renderClientList();
+}
+
+function getClient(id) {
+  return clients.find(c => c.id === (id || activeClientId));
+}
+
+// ── Client list ───────────────────────────────────────────────────────────────
+function renderClientList() {
+  const search = document.getElementById('client-search').value.toLowerCase();
+  const list   = document.getElementById('client-list');
+  const filtered = clients.filter(c => c.name.toLowerCase().includes(search));
+
+  if (filtered.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:24px 12px;color:rgba(255,255,255,.3);font-size:13px;">No clients found</div>';
+    return;
+  }
+
+  list.innerHTML = filtered.map(c => {
+    const progress  = getOverallProgress(c);
+    const hasPwd    = !!c.hasPassword;
+    return `<div class="client-card ${c.id === activeClientId ? 'active' : ''}" onclick="selectClient('${c.id}')">
+      <div class="cc-name">${esc(c.name)}</div>
+      <div class="cc-meta">
+        <span class="cc-phase-badge">Phase ${c.currentPhase}/5</span>
+        <span>${progress}% done</span>
+        <button class="cc-set-pwd ${hasPwd ? 'cc-has-pwd' : ''}"
+          onclick="event.stopPropagation(); openPwdModal('${c.id}')"
+          title="${hasPwd ? 'Update client portal password' : 'Set client portal password'}">
+          ${hasPwd ? '🔑 Portal ✓' : '🔑 Set pwd'}
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Progress helpers ──────────────────────────────────────────────────────────
+function getOverallProgress(client) {
+  let total = 0, done = 0;
+  for (let p = 1; p <= 5; p++) {
+    PHASES[p].sections.forEach(s => {
+      total++;
+      const key = `${p}-${s.id}`;
+      if (client.sections && client.sections[key] && client.sections[key].status === 'complete') done++;
+    });
+  }
+  return total ? Math.round((done / total) * 100) : 0;
+}
+
+function getPhaseProgress(client, phase) {
+  const sections = PHASES[phase].sections;
+  let done = 0;
+  sections.forEach(s => {
+    const key = `${phase}-${s.id}`;
+    if (client.sections && client.sections[key] && client.sections[key].status === 'complete') done++;
+  });
+  return { done, total: sections.length };
+}
+
+// ── Select client ─────────────────────────────────────────────────────────────
+function selectClient(id) {
+  activeClientId = id;
+  activePhase = getClient().currentPhase || 1;
+  renderClientList();
+  renderClientView();
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('client-view').style.display = 'block';
+  document.getElementById('topbar-actions').style.display = 'flex';
+}
+
+function renderClientView() {
+  const client = getClient();
+  if (!client) return;
+  document.getElementById('topbar-title').textContent = client.name;
+  document.getElementById('topbar-meta').textContent = `Started: ${fmtDate(client.programStartDate)} · Last updated: ${fmtDate(client.lastUpdated)}`;
+  renderInfoBar(client);
+  const gns = document.getElementById('general-notes-section');
+  gns.style.display = 'block';
+  document.getElementById('general-notes-ta').value = client.generalNotes || '';
+  renderPhaseTabs(client);
+  renderPhaseContent(client);
+}
+
+function renderInfoBar(client) {
+  document.getElementById('client-info-bar').innerHTML = `
+    <div class="info-group">
+      <label>Client Name</label>
+      <div class="info-val">${esc(client.name)}</div>
+    </div>
+    <div class="info-group">
+      <label>Email</label>
+      <div class="info-val">${esc(client.email || '—')}</div>
+    </div>
+    <div class="info-group">
+      <label>Phone</label>
+      <div class="info-val">${esc(client.phone || '—')}</div>
+    </div>
+    <div class="info-group">
+      <label>Program Start</label>
+      <div class="info-val">${fmtDate(client.programStartDate)}</div>
+    </div>
+    <div class="info-group">
+      <label>Current Phase</label>
+      <div style="display:flex;gap:6px;align-items:center;margin-top:4px;">
+        ${[1,2,3,4,5].map(p => `
+          <button onclick="setCurrentPhase(${p})" style="width:28px;height:28px;border-radius:50%;border:2px solid ${p === client.currentPhase ? 'var(--gold)' : 'var(--gray3)'};background:${p === client.currentPhase ? 'var(--gold)' : 'transparent'};color:${p === client.currentPhase ? 'var(--navy)' : 'var(--gray5)'};font-weight:700;font-size:12px;cursor:pointer;transition:all .15s;">${p}</button>
+        `).join('')}
+      </div>
+    </div>
+    <div class="info-group" style="flex:1;">
+      <label>Overall Progress</label>
+      <div style="margin-top:8px;">
+        <div style="height:6px;background:var(--gray2);border-radius:3px;overflow:hidden;">
+          <div style="height:100%;width:${getOverallProgress(client)}%;background:var(--gold);border-radius:3px;transition:width .3s;"></div>
+        </div>
+        <div style="font-size:11px;color:var(--gray5);margin-top:4px;">${getOverallProgress(client)}% complete</div>
+      </div>
+    </div>`;
+}
+
+function renderPhaseTabs(client) {
+  document.getElementById('phase-tabs').innerHTML = [1,2,3,4,5].map(p =>
+    `<div class="phase-tab ${p === activePhase ? 'active' : ''}" onclick="switchPhase(${p})">
+      <span class="pt-num">Phase ${p}</span>
+      ${PHASES[p].title.split(' ')[0]}…
+    </div>`
+  ).join('');
+}
+
+function renderPhaseContent(client) {
+  const phase = PHASES[activePhase];
+  const prog  = getPhaseProgress(client, activePhase);
+  const pct   = Math.round((prog.done / prog.total) * 100);
+
+  document.getElementById('phase-header').innerHTML = `
+    <div class="ph-num">Phase ${activePhase} of 5 · ${phase.weeks}</div>
+    <h3>${phase.title}</h3>
+    <div class="ph-tag">${phase.tagline}</div>
+    <div class="phase-progress">
+      <div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div>
+      <div class="prog-label">${prog.done}/${prog.total} sections complete</div>
+    </div>`;
+
+  document.getElementById('section-list').innerHTML = phase.sections.map(s => {
+    const key = `${activePhase}-${s.id}`;
+    const sec = (client.sections && client.sections[key]) || {};
+    return buildSectionHTML(s.id, s.title, key, sec, sec.status || 'not-started');
+  }).join('');
+}
+
+function buildSectionHTML(num, title, key, sec, status) {
+  const badgeClass  = { complete:'badge-complete', 'in-progress':'badge-in-progress', attention:'badge-attention', 'not-started':'badge-not-started' }[status] || 'badge-not-started';
+  const badgeLabel  = { complete:'Complete', 'in-progress':'In Progress', attention:'Needs Attention', 'not-started':'Not Started' }[status] || 'Not Started';
+  const commitStatus = sec.commitmentStatus || 'none';
+
+  return `<div class="section-item status-${status}" id="sec-${key}">
+    <div class="section-header" onclick="toggleSection('${key}')">
+      <div class="sec-num">${num}</div>
+      <div class="sec-title">${esc(title)}</div>
+      <span class="sec-status-badge ${badgeClass}">${badgeLabel}</span>
+      <span class="sec-chevron">▶</span>
+    </div>
+    <div class="section-body">
+      <div class="field-group">
+        <label>Client's Answer / Response</label>
+        <textarea placeholder="Record what the client shared about this section…" oninput="scheduleSectionSave('${key}', this)" data-field="clientAnswer">${esc(sec.clientAnswer || '')}</textarea>
+      </div>
+      <div class="field-group">
+        <label>Coach Outcome &amp; Feedback <span style="color:var(--gold);font-size:10px;">(shared with client)</span></label>
+        <textarea class="outcome-box" placeholder="Your coaching outcome, observations, and feedback for this section…" oninput="scheduleSectionSave('${key}', this)" data-field="coachOutcome">${esc(sec.coachOutcome || '')}</textarea>
+      </div>
+      <div class="commitment-row">
+        <label>Commitment:</label>
+        <input type="text" placeholder="What did they commit to doing?" value="${esc(sec.commitment || '')}" oninput="scheduleSectionSave('${key}', this)" data-field="commitment">
+        <button class="commit-status-btn commit-${commitStatus === 'met' ? 'met' : commitStatus === 'missed' ? 'miss' : 'none'}"
+          onclick="cycleCommitmentStatus('${key}')" title="Click to toggle commitment status">
+          ${commitStatus === 'met' ? '✓ Met' : commitStatus === 'missed' ? '✗ Missed' : '○ Pending'}
+        </button>
+      </div>
+      <div class="section-actions">
+        <div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--gray5);margin-bottom:6px;font-weight:600;">Status</div>
+          <div class="status-selector">
+            ${['not-started','in-progress','complete','attention'].map(s => `
+              <button class="status-btn ${status === s ? 'active-'+s : ''}" onclick="setStatus('${key}', '${s}')">${
+                {'not-started':'Not Started','in-progress':'In Progress','complete':'Complete','attention':'Attention'}[s]
+              }</button>`).join('')}
+          </div>
+        </div>
+        <div class="save-indicator" id="save-ind-${key.replace('-','_')}">Saved ✓</div>
+      </div>
+      ${sec.lastUpdated ? `<div style="font-size:10px;color:var(--gray4);margin-top:10px;">Last updated: ${fmtDate(sec.lastUpdated)}</div>` : ''}
+    </div>
+  </div>`;
+}
+
+function toggleSection(key) {
+  document.getElementById(`sec-${key}`).classList.toggle('open');
+}
+
+function switchPhase(p) {
+  activePhase = p;
+  renderPhaseTabs(getClient());
+  renderPhaseContent(getClient());
+}
+
+// ── Set current phase ─────────────────────────────────────────────────────────
+async function setCurrentPhase(p) {
+  const client = getClient();
+  client.currentPhase = p;
+  await apiFetch(`/api/clients/${client.id}`, 'PUT', { currentPhase: p });
+  updateLocalClient(client.id, { currentPhase: p });
+  renderInfoBar(client);
+  renderClientList();
+  toast('Current phase updated');
+}
+
+// ── Status ────────────────────────────────────────────────────────────────────
+function setStatus(key, status) {
+  const el = document.getElementById(`sec-${key}`);
+  el.className = el.className.replace(/status-\S+/, `status-${status}`);
+  const badge = el.querySelector('.sec-status-badge');
+  badge.className = 'sec-status-badge ' + { complete:'badge-complete', 'in-progress':'badge-in-progress', attention:'badge-attention', 'not-started':'badge-not-started' }[status];
+  badge.textContent = { complete:'Complete', 'in-progress':'In Progress', attention:'Needs Attention', 'not-started':'Not Started' }[status];
+  el.querySelectorAll('.status-btn').forEach(b => {
+    b.className = 'status-btn';
+    const label = b.textContent.trim();
+    if ((status === 'not-started' && label === 'Not Started') ||
+        (status === 'in-progress' && label === 'In Progress') ||
+        (status === 'complete'    && label === 'Complete') ||
+        (status === 'attention'   && label === 'Attention')) {
+      b.classList.add('active-' + status);
+    }
+  });
+  saveSectionField(key, 'status', status);
+}
+
+function cycleCommitmentStatus(key) {
+  const el     = document.getElementById(`sec-${key}`);
+  const btn    = el.querySelector('.commit-status-btn');
+  const client = getClient();
+  const sec    = (client.sections && client.sections[key]) || {};
+  const current = sec.commitmentStatus || 'none';
+  const next    = current === 'none' ? 'met' : current === 'met' ? 'missed' : 'none';
+  btn.className = `commit-status-btn commit-${next === 'met' ? 'met' : next === 'missed' ? 'miss' : 'none'}`;
+  btn.textContent = next === 'met' ? '✓ Met' : next === 'missed' ? '✗ Missed' : '○ Pending';
+  saveSectionField(key, 'commitmentStatus', next);
+}
+
+// ── Save section ──────────────────────────────────────────────────────────────
+function scheduleSectionSave(key, el) {
+  clearTimeout(saveTimers[key]);
+  saveTimers[key] = setTimeout(() => saveSectionField(key, el.getAttribute('data-field'), el.value), 800);
+}
+
+async function saveSectionField(key, field, value) {
+  const client = getClient();
+  if (!client) return;
+  client.sections = client.sections || {};
+  client.sections[key] = client.sections[key] || {};
+  client.sections[key][field] = value;
+  await apiFetch(`/api/clients/${client.id}/sections/${key}`, 'PUT', { [field]: value });
+  client.sections[key].lastUpdated = new Date().toISOString();
+  updateLocalClient(client.id, { sections: client.sections });
+  const ind = document.getElementById('save-ind-' + key.replace('-', '_'));
+  if (ind) { ind.classList.add('show'); setTimeout(() => ind.classList.remove('show'), 2000); }
+  renderInfoBar(client);
+  renderClientList();
+}
+
+// ── General notes ─────────────────────────────────────────────────────────────
+function scheduleClientNoteSave() {
+  clearTimeout(clientNoteSaveTimer);
+  clientNoteSaveTimer = setTimeout(saveClientNotes, 900);
+}
+
+async function saveClientNotes() {
+  const client = getClient();
+  if (!client) return;
+  const notes = document.getElementById('general-notes-ta').value;
+  client.generalNotes = notes;
+  await apiFetch(`/api/clients/${client.id}`, 'PUT', { generalNotes: notes });
+  updateLocalClient(client.id, { generalNotes: notes });
+}
+
+// ── Add / Edit Client ─────────────────────────────────────────────────────────
+function openAddClientModal() {
+  modalMode = 'add';
+  document.getElementById('modal-title').textContent = 'Add New Client';
+  document.getElementById('modal-sub').textContent = "Enter the client's details to create their profile.";
+  document.getElementById('modal-submit-btn').textContent = 'Create Client';
+  ['mf-name','mf-email','mf-phone'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('mf-start').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function openEditClientModal() {
+  const client = getClient();
+  if (!client) return;
+  modalMode = 'edit';
+  document.getElementById('modal-title').textContent = 'Edit Client';
+  document.getElementById('modal-sub').textContent = "Update this client's details.";
+  document.getElementById('modal-submit-btn').textContent = 'Save Changes';
+  document.getElementById('mf-name').value  = client.name;
+  document.getElementById('mf-email').value = client.email || '';
+  document.getElementById('mf-phone').value = client.phone || '';
+  document.getElementById('mf-start').value = client.programStartDate || '';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+async function submitClientModal(e) {
+  e.preventDefault();
+  const payload = {
+    name:             document.getElementById('mf-name').value,
+    email:            document.getElementById('mf-email').value,
+    phone:            document.getElementById('mf-phone').value,
+    programStartDate: document.getElementById('mf-start').value
+  };
+  if (modalMode === 'add') {
+    const newClient = await apiFetch('/api/clients', 'POST', payload);
+    clients.push(newClient);
+    closeModal();
+    selectClient(newClient.id);
+    toast('Client created');
+  } else {
+    const client = getClient();
+    await apiFetch(`/api/clients/${client.id}`, 'PUT', payload);
+    updateLocalClient(client.id, payload);
+    closeModal();
+    renderClientView();
+    renderClientList();
+    toast('Client updated');
+  }
+}
+
+// ── Delete ────────────────────────────────────────────────────────────────────
+function openDeleteModal() {
+  const client = getClient();
+  document.getElementById('delete-modal-msg').textContent =
+    `This will permanently delete "${client.name}" and all their progress data. This cannot be undone.`;
+  document.getElementById('delete-modal-overlay').classList.add('open');
+}
+function closeDeleteModal() { document.getElementById('delete-modal-overlay').classList.remove('open'); }
+async function confirmDelete() {
+  await apiFetch(`/api/clients/${activeClientId}`, 'DELETE');
+  clients = clients.filter(c => c.id !== activeClientId);
+  activeClientId = null;
+  closeDeleteModal();
+  renderClientList();
+  document.getElementById('empty-state').style.display  = 'flex';
+  document.getElementById('client-view').style.display  = 'none';
+  document.getElementById('topbar-title').textContent   = 'Coach Dashboard';
+  document.getElementById('topbar-meta').textContent    = '';
+  document.getElementById('topbar-actions').style.display = 'none';
+  toast('Client deleted');
+}
+
+// ── Set Client Password ───────────────────────────────────────────────────────
+function openPwdModal(clientId) {
+  pwdTargetClientId = clientId;
+  const client = getClient(clientId);
+  document.getElementById('pwd-sub').textContent =
+    `Setting portal password for ${client.name}. They will log in with: ${client.email || '(no email set)'}`;
+  document.getElementById('pwd-input').value = '';
+  document.getElementById('pwd-error').textContent = '';
+  document.getElementById('pwd-error').classList.remove('show');
+  document.getElementById('pwd-modal-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('pwd-input').focus(), 100);
+}
+
+function closePwdModal() {
+  document.getElementById('pwd-modal-overlay').classList.remove('open');
+  pwdTargetClientId = null;
+}
+
+async function submitSetPassword() {
+  const password = document.getElementById('pwd-input').value;
+  const errEl    = document.getElementById('pwd-error');
+  errEl.classList.remove('show');
+
+  if (!pwdTargetClientId) return;
+  const client = getClient(pwdTargetClientId);
+
+  if (!client.email) {
+    errEl.textContent = 'This client has no email address. Add one first via Edit Client.';
+    errEl.classList.add('show');
+    return;
+  }
+  if (!password || password.length < 6) {
+    errEl.textContent = 'Password must be at least 6 characters.';
+    errEl.classList.add('show');
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/clients/${pwdTargetClientId}/set-password`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ password })
+    });
+    const json = await res.json();
+    if (!res.ok) {
+      errEl.textContent = json.error || 'Failed to set password.';
+      errEl.classList.add('show');
+      return;
+    }
+    // Mark in local state so the badge updates
+    updateLocalClient(pwdTargetClientId, { hasPassword: true });
+    closePwdModal();
+    renderClientList();
+    toast(`Portal password set for ${client.name}`);
+  } catch {
+    errEl.textContent = 'Network error. Please try again.';
+    errEl.classList.add('show');
+  }
+}
+
+// ── Report ────────────────────────────────────────────────────────────────────
+function openReportModal() {
+  const client = getClient();
+  if (!client) return;
+  document.getElementById('report-modal-title').textContent = `Progress Report — ${client.name}`;
+  document.getElementById('report-modal-sub').textContent =
+    `Generated ${new Date().toLocaleDateString('en-AU', { day:'numeric', month:'long', year:'numeric' })} · InteGrit Life Coaching`;
+  document.getElementById('report-content').textContent = generateReport(client);
+  document.getElementById('report-modal-overlay').style.display = 'flex';
+}
+function closeReportModal() { document.getElementById('report-modal-overlay').style.display = 'none'; }
+function copyReport() {
+  navigator.clipboard.writeText(document.getElementById('report-content').textContent)
+    .then(() => toast('Report copied to clipboard'));
+}
+
+function generateReport(client) {
+  const date = new Date().toLocaleDateString('en-AU', { day:'numeric', month:'long', year:'numeric' });
+  let out = `INTEGRIT LIFE COACHING — PROGRESS REPORT\n${'─'.repeat(50)}\n`;
+  out += `Client: ${client.name}\nProgram Start: ${fmtDate(client.programStartDate)}\nReport Date: ${date}\n`;
+  out += `Current Phase: Phase ${client.currentPhase} — ${PHASES[client.currentPhase].title}\n`;
+  out += `Overall Progress: ${getOverallProgress(client)}%\n`;
+  if (client.generalNotes) out += `\nCoach Notes:\n${client.generalNotes}\n`;
+  out += `\n${'═'.repeat(50)}\n\n`;
+  for (let p = 1; p <= 5; p++) {
+    const phase = PHASES[p];
+    const prog  = getPhaseProgress(client, p);
+    out += `PHASE ${p}: ${phase.title.toUpperCase()} (${phase.weeks})\n${phase.tagline}\n`;
+    out += `Progress: ${prog.done}/${prog.total} sections complete\n${'─'.repeat(40)}\n`;
+    phase.sections.forEach(s => {
+      const key = `${p}-${s.id}`;
+      const sec = (client.sections && client.sections[key]) || {};
+      const status = sec.status || 'not-started';
+      out += `\n  ${p}.${s.id} ${s.title}\n`;
+      out += `  Status: ${{ complete:'✓ Complete', 'in-progress':'⟳ In Progress', attention:'⚠ Needs Attention', 'not-started':'○ Not Started' }[status] || status}\n`;
+      if (sec.coachOutcome) { out += `\n  Coaching Outcome:\n`; sec.coachOutcome.split('\n').forEach(l => out += `    ${l}\n`); }
+      if (sec.commitment) {
+        const cs = sec.commitmentStatus || 'none';
+        out += `\n  Commitment: ${sec.commitment}\n  Commitment Status: ${cs === 'met' ? '✓ Met' : cs === 'missed' ? '✗ Missed' : '○ Pending'}\n`;
+      }
+    });
+    out += '\n';
+  }
+  out += `${'═'.repeat(50)}\nThis report is personal and confidential.\nINTEGRIT · Life Coaching\n`;
+  return out;
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function updateLocalClient(id, patch) {
+  const idx = clients.findIndex(c => c.id === id);
+  if (idx !== -1) clients[idx] = { ...clients[idx], ...patch };
+}
+
+async function apiFetch(url, method = 'GET', body) {
+  const opts = { method, headers: {} };
+  if (body) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
+  const res = await fetch(url, opts);
+  if (res.status === 401) { location.href = '/login'; return null; }
+  return method === 'DELETE' ? res.json() : res.json();
+}
+
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('en-AU', { day:'numeric', month:'short', year:'numeric' });
+}
+
+function esc(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeModal(); closeReportModal(); closeDeleteModal(); closePwdModal(); }
+});
+
+// Also expose hasPassword in the GET /api/clients response
+// The server strips passwordHash but we need to know if one exists.
+// We handle this by checking a `hasPassword` flag returned by the server.
+init();
+</script>
+</body>
+</html>

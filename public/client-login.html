@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InteGrit · Client Portal Login</title>
+<style>
+  :root {
+    --navy:  #1a1a2e;
+    --navy2: #16213e;
+    --gold:  #c9a84c;
+    --gold2: #e8c96a;
+    --green: #2d6a4f;
+    --red:   #c0392b;
+    --bg:    #f4f5f7;
+    --white: #ffffff;
+    --gray1: #f8f9fa;
+    --gray3: #dee2e6;
+    --gray5: #6c757d;
+    --text:  #212529;
+    --radius: 8px;
+    --shadow: 0 4px 24px rgba(0,0,0,.15);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: linear-gradient(135deg, #f4f5f7 0%, #eaf0ea 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .card {
+    background: var(--white);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    padding: 44px 40px 40px;
+    width: 100%;
+    max-width: 400px;
+  }
+  .logo {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  .logo h1 {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--navy);
+    letter-spacing: 3px;
+  }
+  .logo p {
+    font-size: 11px;
+    color: var(--gray5);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-top: 4px;
+  }
+  .green-bar {
+    height: 3px;
+    background: linear-gradient(90deg, var(--green), #40916c);
+    border-radius: 2px;
+    margin: 0 auto 28px;
+    width: 60px;
+  }
+  h2 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 6px;
+    text-align: center;
+  }
+  .subtitle {
+    font-size: 13px;
+    color: var(--gray5);
+    text-align: center;
+    margin-bottom: 24px;
+    line-height: 1.5;
+  }
+  .error-msg {
+    background: #fdf0f0;
+    border: 1px solid #f5c6cb;
+    color: var(--red);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    font-size: 13px;
+    margin-bottom: 16px;
+    display: none;
+    text-align: center;
+  }
+  .error-msg.show { display: block; }
+  .field { margin-bottom: 16px; }
+  label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--gray5);
+    margin-bottom: 6px;
+  }
+  input[type="email"],
+  input[type="password"] {
+    width: 100%;
+    border: 1.5px solid var(--gray3);
+    border-radius: var(--radius);
+    padding: 11px 14px;
+    font-size: 15px;
+    font-family: inherit;
+    color: var(--text);
+    background: var(--gray1);
+    outline: none;
+    transition: border-color .15s, background .15s;
+  }
+  input[type="email"]:focus,
+  input[type="password"]:focus {
+    border-color: var(--green);
+    background: var(--white);
+  }
+  button[type="submit"] {
+    margin-top: 8px;
+    width: 100%;
+    padding: 13px;
+    background: var(--green);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: .5px;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  button[type="submit"]:hover { background: #40916c; }
+  .coach-link {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 12px;
+    color: var(--gray5);
+  }
+  .coach-link a {
+    color: var(--gold);
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .coach-link a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <h1>INTEGRIT</h1>
+    <p>Life Coaching</p>
+  </div>
+  <div class="green-bar"></div>
+  <h2>Client Portal</h2>
+  <p class="subtitle">Sign in to view your coaching journey, progress, and session outcomes.</p>
+
+  <div class="error-msg" id="err">Email or password incorrect. Please try again.</div>
+
+  <form method="POST" action="/client/login">
+    <div class="field">
+      <label for="email">Email Address</label>
+      <input type="email" id="email" name="email" autofocus autocomplete="email" required placeholder="you@email.com">
+    </div>
+    <div class="field">
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" autocomplete="current-password" required placeholder="Your portal password">
+    </div>
+    <button type="submit">Sign In to My Portal</button>
+  </form>
+
+  <div class="coach-link">
+    Are you the coach? <a href="/login">Coach sign in →</a>
+  </div>
+</div>
+
+<script>
+  if (new URLSearchParams(location.search).get('error')) {
+    document.getElementById('err').classList.add('show');
+  }
+</script>
+</body>
+</html>

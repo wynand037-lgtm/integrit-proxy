@@ -300,14 +300,139 @@
   }
   #toast.show { transform: translateY(0); }
 
+  /* ── Hamburger (desktop: hidden) ── */
+  #hamburger {
+    display: none;
+    background: none; border: none; cursor: pointer;
+    flex-direction: column; justify-content: center; gap: 5px;
+    padding: 6px 8px; border-radius: var(--radius);
+    min-width: 44px; min-height: 44px; align-items: center;
+    transition: background .15s; flex-shrink: 0;
+  }
+  #hamburger:hover { background: var(--gray2); }
+  #hamburger span {
+    display: block; width: 22px; height: 2px;
+    background: var(--navy); border-radius: 2px; transition: all .25s;
+  }
+
+  /* ── Report modal overlay alignment ── */
+  .modal-center { align-items: center; }
+
+  /* ── Sidebar overlay (mobile dim) ── */
+  #sidebar-overlay {
+    display: none; position: fixed; inset: 0;
+    z-index: 199; background: rgba(0,0,0,.45);
+  }
+  #sidebar-overlay.open { display: block; }
+
   /* ── Responsive ── */
-  @media (max-width: 700px) {
-    #sidebar { width: 220px; min-width: 220px; }
-    #content { padding: 16px; }
+  @media (max-width: 768px) {
+    body { overflow: hidden; }
+
+    /* Sidebar becomes slide-in overlay */
+    #sidebar {
+      position: fixed; left: -290px; top: 0; height: 100vh;
+      z-index: 200; width: 280px; min-width: 280px;
+      transition: left .3s ease; box-shadow: 4px 0 20px rgba(0,0,0,.3);
+    }
+    #sidebar.open { left: 0; }
+
+    /* Show hamburger, hide desktop topbar-meta on first line */
+    #hamburger { display: flex; }
+
+    /* Topbar */
+    #topbar {
+      padding: 0 12px; height: 56px; flex-shrink: 0;
+      flex-wrap: nowrap; gap: 8px;
+    }
+    #topbar h2 { font-size: 15px; }
+    #topbar-meta { display: none; }
+    #topbar-actions { gap: 6px; }
+    #topbar-actions .btn {
+      padding: 6px 10px; font-size: 12px;
+      min-height: 44px; min-width: 44px;
+    }
+
+    /* Content */
+    #content { padding: 14px 12px; }
+
+    /* Client info bar */
+    #client-info-bar {
+      flex-direction: column; gap: 10px; padding: 14px 16px;
+    }
+    .info-group { min-width: unset; width: 100%; }
+
+    /* Phase tabs — horizontal scroll */
+    #phase-tabs {
+      overflow-x: auto; flex-wrap: nowrap; padding-bottom: 4px;
+      -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    }
+    #phase-tabs::-webkit-scrollbar { display: none; }
+    .phase-tab { padding: 8px 14px; font-size: 12px; flex-shrink: 0; }
+
+    /* Phase header */
+    #phase-header { padding: 14px 16px; }
+    #phase-header h3 { font-size: 18px; }
+
+    /* Section header */
+    .section-header { padding: 12px 12px; gap: 8px; }
+    .sec-title { font-size: 13px; }
+    .sec-status-badge { font-size: 10px; padding: 2px 8px; }
+    .section-body { padding: 0 12px 14px; }
+
+    /* Status selector */
+    .section-actions { flex-direction: column; gap: 10px; }
+    .status-btn { min-height: 38px; padding: 6px 12px; font-size: 12px; }
+
+    /* Commitment row */
+    .commitment-row { flex-wrap: wrap; }
+    .commitment-row input[type="text"] { width: 100%; order: 2; }
+    .commit-status-btn { min-height: 44px; width: 100%; order: 3; font-size: 13px; }
+
+    /* Buttons — 44px tap targets */
+    .btn { min-height: 44px; }
+
+    /* Modals — bottom sheet style */
+    #modal-overlay,
+    #delete-modal-overlay,
+    #report-modal-overlay { align-items: flex-end; }
+    .modal-center { align-items: flex-end; }
+    #modal-overlay > #modal,
+    #delete-modal-overlay > #delete-modal,
+    #report-modal-overlay > #modal {
+      width: 100%; max-width: 100%;
+      border-radius: 20px 20px 0 0;
+      max-height: 92vh; padding: 24px 18px 32px;
+      margin: 0;
+    }
+    #modal .form-row { flex-direction: column; gap: 10px; }
+    #modal-actions { flex-direction: column-reverse; gap: 8px; }
+    #modal-actions .btn { width: 100%; min-height: 48px; }
+    #delete-modal .dm-btns { flex-direction: column-reverse; gap: 8px; }
+    #delete-modal .dm-btns .btn { width: 100%; min-height: 48px; }
+
+    /* General notes */
+    #general-notes-section { padding: 14px 16px; }
+
+    /* Toast */
+    #toast { right: 12px; left: 12px; bottom: 16px; text-align: center; }
+
+    /* Empty state */
+    #empty-state h3 { font-size: 16px; }
+    #empty-state p  { font-size: 14px; }
+  }
+
+  @media (max-width: 400px) {
+    #topbar h2 { font-size: 13px; }
+    .phase-tab { padding: 7px 11px; font-size: 11px; }
+    #phase-header h3 { font-size: 16px; }
   }
 </style>
 </head>
 <body>
+
+<!-- Mobile sidebar overlay dimmer -->
+<div id="sidebar-overlay" onclick="closeSidebar()"></div>
 
 <!-- Sidebar -->
 <div id="sidebar">
@@ -325,6 +450,9 @@
 <!-- Main -->
 <div id="main">
   <div id="topbar">
+    <button id="hamburger" onclick="toggleSidebar()" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
     <h2 id="topbar-title">Coach Dashboard</h2>
     <span id="topbar-meta"></span>
     <div id="topbar-actions" style="display:none; gap:8px; display:none;">
@@ -387,7 +515,7 @@
 </div>
 
 <!-- Report Modal -->
-<div id="report-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:1000; align-items:center; justify-content:center;">
+<div id="report-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:1000; justify-content:center;" class="modal-center">
   <div id="modal" style="max-width:760px;">
     <button style="position:absolute;top:16px;right:20px;background:none;border:none;font-size:22px;cursor:pointer;color:#adb5bd;" onclick="closeReportModal()">×</button>
     <h3 id="report-modal-title">Client Progress Report</h3>
@@ -569,6 +697,7 @@ function selectClient(id) {
   document.getElementById('client-view').style.display = 'block';
   const ta = document.getElementById('topbar-actions');
   ta.style.display = 'flex';
+  if (window.innerWidth <= 768) closeSidebar();
 }
 
 function renderClientView() {
@@ -1006,9 +1135,27 @@ function toast(msg) {
   setTimeout(() => t.classList.remove('show'), 2500);
 }
 
+// ── Mobile sidebar ────────────────────────────────────────────────────────────
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+  const isOpen  = sidebar.classList.contains('open');
+  if (isOpen) {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('open');
+  } else {
+    sidebar.classList.add('open');
+    overlay.classList.add('open');
+  }
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
+}
+
 // ── Keyboard ──────────────────────────────────────────────────────────────────
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeModal(); closeReportModal(); closeDeleteModal(); }
+  if (e.key === 'Escape') { closeModal(); closeReportModal(); closeDeleteModal(); closeSidebar(); }
 });
 
 init();
